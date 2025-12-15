@@ -6,7 +6,7 @@
     <title>TranscodeHub | Ultimate Video Evolution</title>
     
     <!-- SEO -->
-    <meta name="description" content="Compress, Convert, and Add Subtitles to videos instantly. Privacy-first, client-side video tools powered by WebAssembly.">
+    <meta name="description" content="Compress and Convert videos locally. Privacy-first video tools.">
     <meta name="theme-color" content="#050505">
     
     <!-- FAVICON -->
@@ -19,18 +19,19 @@
     <!-- LIBRARIES -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- FFmpeg Core -->
     <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js"></script>
 
     <!-- FONTS -->
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&family=Inter:wght@300;500;700&display=swap" rel="stylesheet">
 
     <style>
-        /* --- THEME & VARIABLES --- */
+        /* --- THEME --- */
         :root {
             --bg-dark: #050505;
             --text-dark: #ffffff;
-            --accent: #00ffcc; /* Cyber Teal */
-            --secondary: #ff0055; /* Cyber Pink */
+            --accent: #00ffcc; /* Teal */
+            --secondary: #ff0055; /* Pink */
         }
 
         body.light-mode {
@@ -45,26 +46,26 @@
             color: var(--text-dark);
             font-family: 'Inter', sans-serif;
             overflow-x: hidden;
-            transition: background-color 0.3s ease, color 0.3s ease;
+            transition: background-color 0.3s;
         }
 
         h1, h2, h3, .tech-font { font-family: 'Orbitron', sans-serif; }
         .mono-font { font-family: 'Share Tech Mono', monospace; }
 
-        /* --- PRELOADER --- */
+        /* PRELOADER (Now covers the screen instead of hiding body) */
         #preloader {
             position: fixed; inset: 0; background: #000; z-index: 9999;
             display: flex; flex-direction: column; align-items: center; justify-content: center;
             transition: opacity 0.5s ease;
         }
 
-        /* --- ANIMATIONS --- */
-        .reveal-left { opacity: 0; transform: translateX(-50px) rotate(-2deg); transition: 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        .reveal-right { opacity: 0; transform: translateX(50px) rotate(2deg); transition: 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
-        .reveal-up { opacity: 0; transform: translateY(30px); transition: 0.8s ease-out; }
-        .visible { opacity: 1; transform: translateX(0) rotate(0); }
+        /* ANIMATIONS */
+        .reveal-left { opacity: 0; transform: translateX(-50px); transition: 0.8s; }
+        .reveal-right { opacity: 0; transform: translateX(50px); transition: 0.8s; }
+        .reveal-up { opacity: 0; transform: translateY(30px); transition: 0.8s; }
+        .visible { opacity: 1; transform: translateX(0) translateY(0); }
 
-        /* TV Logo */
+        /* TV LOGO */
         .tv-container {
             position: relative; width: 40px; height: 30px; 
             border: 2px solid var(--accent); border-radius: 4px;
@@ -78,59 +79,35 @@
         
         @keyframes flicker {
             0%, 100% { opacity: 1; box-shadow: 0 0 10px var(--accent); }
-            50% { opacity: 0.8; box-shadow: 0 0 20px var(--accent); }
-            52% { opacity: 0.4; } 54% { opacity: 1; }
+            50% { opacity: 0.8; } 52% { opacity: 0.4; } 54% { opacity: 1; }
         }
 
-        /* Scanline Effect for Cards */
-        .scanline-card::before {
-            content: " ";
-            display: block;
-            position: absolute;
-            top: 0; left: 0; bottom: 0; right: 0;
-            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%);
-            background-size: 100% 4px;
-            z-index: 2;
-            pointer-events: none;
-        }
-
-        /* Carousel */
-        .carousel-slide { position: absolute; inset: 0; opacity: 0; transition: opacity 1.5s ease-in-out; background-size: cover; background-position: center; }
+        /* CAROUSEL */
+        .carousel-slide { position: absolute; inset: 0; opacity: 0; transition: opacity 1.5s; background-size: cover; background-position: center; }
         .carousel-slide.active { opacity: 0.5; }
 
-        /* Hamburger Spin to X */
-        .ham-line { transition: 0.4s; transform-origin: center; }
+        /* MENU */
+        .menu-overlay { transform: translateY(-100%); transition: transform 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55); }
+        .menu-overlay.open { transform: translateY(0); }
+        .ham-line { transition: 0.3s; transform-origin: center; }
         .nav-active .ham-line:nth-child(1) { transform: translateY(8px) rotate(45deg); }
         .nav-active .ham-line:nth-child(2) { opacity: 0; }
         .nav-active .ham-line:nth-child(3) { transform: translateY(-8px) rotate(-45deg); }
 
-        /* Bouncing Menu */
-        .menu-overlay { transform: translateY(-100%); transition: transform 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55); }
-        .menu-overlay.open { transform: translateY(0); }
-
-        /* FAQ Accordion */
-        .accordion-content { max-height: 0; overflow: hidden; transition: 0.3s ease; }
-        .accordion-item.active .accordion-content { max-height: 200px; padding-bottom: 20px; }
-        .accordion-icon { transition: 0.3s; }
-        .accordion-item.active .accordion-icon { transform: rotate(180deg); color: var(--accent); }
-
-        /* Modal */
+        /* MODAL */
         .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 100; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: 0.3s; }
         .modal-overlay.open { opacity: 1; pointer-events: all; }
         .progress-bar { width: 100%; height: 6px; background: #333; border-radius: 99px; overflow: hidden; margin-top: 15px; }
         .progress-fill { height: 100%; background: var(--accent); width: 0%; transition: width 0.2s linear; box-shadow: 0 0 15px var(--accent); }
 
-        /* Data Box Animation */
-        .data-box {
-            animation: slideInRight 0.5s ease-out;
-        }
-        @keyframes slideInRight { from { opacity: 0; transform: translateX(20px); } to { opacity: 1; transform: translateX(0); } }
-
+        /* FILE STATS BOX */
+        .data-box { border-left: 4px solid var(--accent); background: rgba(0,0,0,0.3); padding: 10px; margin-top: 15px; border-radius: 4px; animation: slideIn 0.5s ease; }
+        @keyframes slideIn { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
     </style>
 </head>
-<body class="opacity-0 transition-opacity duration-500">
+<body>
 
-    <!-- PRELOADER -->
+    <!-- PRELOADER (COVERS SCREEN INSTEAD OF HIDING BODY) -->
     <div id="preloader">
         <div class="tv-container mb-4" style="transform: scale(2);">
             <div class="tv-antenna"></div><div class="tv-antenna"></div>
@@ -140,63 +117,55 @@
 
     <!-- HEADER -->
     <header class="fixed top-0 w-full z-50 bg-black/60 backdrop-blur-md border-b border-white/10 h-16 flex items-center justify-between px-4 lg:px-8">
-        <!-- Hamburger -->
         <button onclick="toggleMenu()" id="hamBtn" class="w-8 h-8 flex flex-col justify-between py-1.5 z-50 group">
             <div class="ham-line w-full h-0.5 bg-white group-hover:bg-[var(--accent)]"></div>
             <div class="ham-line w-full h-0.5 bg-white group-hover:bg-[var(--accent)]"></div>
             <div class="ham-line w-full h-0.5 bg-white group-hover:bg-[var(--accent)]"></div>
         </button>
 
-        <!-- TV Logo -->
         <div class="flex items-center gap-2">
             <div class="tv-container"><div class="tv-antenna"></div><div class="tv-antenna"></div></div>
             <span class="tech-font text-xl tracking-wider font-bold">TRANSCODE<span style="color:var(--accent)">HUB</span></span>
         </div>
 
-        <!-- Light Switch -->
-        <button onclick="toggleTheme()" class="w-8 h-8 rounded-full border border-white/20 flex items-center justify-center hover:bg-white/10 transition">
+        <button onclick="toggleTheme()" class="w-8 h-8 rounded-full border border-white/20 flex items-center justify-center hover:bg-white/10">
             <i class="fa-solid fa-lightbulb text-yellow-400"></i>
         </button>
     </header>
 
-    <!-- BOUNCING MENU -->
+    <!-- MENU -->
     <div class="menu-overlay fixed inset-0 z-40 bg-[var(--bg-dark)] flex flex-col items-center justify-center gap-8 text-2xl font-bold tech-font">
         <a href="#home" onclick="toggleMenu()" class="hover:text-[var(--accent)] hover:scale-110 transition">HOME</a>
         <a href="#tools" onclick="toggleMenu()" class="hover:text-[var(--accent)] hover:scale-110 transition">TOOLS</a>
-        <a href="#features" onclick="toggleMenu()" class="hover:text-[var(--accent)] hover:scale-110 transition">FEATURES</a>
         <a href="#faq" onclick="toggleMenu()" class="hover:text-[var(--accent)] hover:scale-110 transition">FAQ</a>
-        <button id="installAppBtn" class="hidden text-sm border border-[var(--accent)] text-[var(--accent)] px-6 py-2 rounded-full hover:bg-[var(--accent)] hover:text-black transition">INSTALL APP</button>
+        <button id="installAppBtn" class="hidden text-sm border border-[var(--accent)] text-[var(--accent)] px-6 py-2 rounded-full">INSTALL APP</button>
     </div>
 
-    <!-- HERO CAROUSEL -->
+    <!-- HERO -->
     <section id="home" class="relative h-screen flex items-center justify-center overflow-hidden">
         <div class="carousel-slide active" style="background-image: url('https://images.unsplash.com/photo-1535016120720-40c6874c3b1c?auto=format&fit=crop&w=1920&q=80')"></div>
         <div class="carousel-slide" style="background-image: url('https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1920&q=80')"></div>
         <div class="absolute inset-0 bg-gradient-to-t from-[var(--bg-dark)] via-black/60 to-black/30"></div>
 
         <div class="relative z-10 text-center px-4 max-w-3xl">
-            <div class="inline-block px-3 py-1 border border-[var(--accent)] text-[var(--accent)] text-[10px] md:text-xs font-bold tracking-[0.3em] mb-4 animate-pulse">
-                v4.0 TURBO
-            </div>
+            <div class="inline-block px-3 py-1 border border-[var(--accent)] text-[var(--accent)] text-xs font-bold tracking-[0.3em] mb-4 animate-pulse">v4.0 TURBO</div>
             <h1 class="text-4xl md:text-7xl font-black mb-6 leading-tight drop-shadow-2xl">
                 REDEFINE YOUR <br> <span class="text-transparent bg-clip-text bg-gradient-to-r from-[var(--accent)] to-blue-500">VIDEO REALITY</span>
             </h1>
-            <p class="text-gray-300 text-sm md:text-lg mb-8">
-                Turbo-Charged Engine. Detailed Analytics. 100% Privacy.
-            </p>
-            <a href="#tools" class="inline-block bg-[var(--accent)] text-black px-8 py-3 font-bold uppercase rounded skew-x-[-10deg] hover:skew-x-0 hover:shadow-[0_0_30px_var(--accent)] transition">
+            <p class="text-gray-300 text-sm md:text-lg mb-8">Turbo Engine. Detailed Analytics. 100% Private.</p>
+            <a href="#tools" class="inline-block bg-[var(--accent)] text-black px-8 py-3 font-bold uppercase rounded skew-x-[-10deg] hover:skew-x-0 transition">
                 <span class="skew-x-[10deg] inline-block">Start Processing</span>
             </a>
         </div>
     </section>
 
-    <!-- TOOLS (FUNCTIONAL CORE) -->
+    <!-- TOOLS -->
     <section id="tools" class="py-20 px-4 max-w-6xl mx-auto min-h-screen">
         <h2 class="text-3xl md:text-5xl font-bold text-center mb-16 tech-font reveal-up">COMMAND CENTER</h2>
 
         <div class="grid lg:grid-cols-2 gap-8">
-            <!-- INPUT ZONE -->
-            <div class="bg-white/5 border border-white/10 p-6 rounded-2xl reveal-left relative overflow-hidden scanline-card">
+            <!-- INPUT -->
+            <div class="bg-white/5 border border-white/10 p-6 rounded-2xl reveal-left relative overflow-hidden">
                 <div class="border-2 border-dashed border-white/20 hover:border-[var(--accent)] rounded-xl h-64 flex flex-col items-center justify-center cursor-pointer relative group transition-all z-10">
                     <input type="file" id="videoInput" accept="video/*" class="absolute inset-0 opacity-0 cursor-pointer z-20">
                     <i id="dropIcon" class="fa-solid fa-cloud-arrow-up text-5xl text-gray-500 group-hover:text-[var(--accent)] mb-4 transition transform group-hover:scale-110"></i>
@@ -204,9 +173,9 @@
                     <p class="text-xs text-gray-400 mt-2">Max 2GB (Browser Limit)</p>
                 </div>
                 
-                <!-- NEW: FILE INTELLIGENCE DISPLAY -->
-                <div id="fileStats" class="mt-4 hidden data-box bg-black/40 border-l-4 border-[var(--accent)] p-3 rounded">
-                    <p class="text-xs text-gray-400 uppercase tracking-wider mb-1">Source Detected:</p>
+                <!-- FILE STATS (INTELLIGENCE) -->
+                <div id="fileStats" class="hidden data-box">
+                    <p class="text-xs text-gray-400 uppercase tracking-wider mb-1 font-bold">Source Detected:</p>
                     <div class="grid grid-cols-2 gap-2 text-sm font-mono">
                         <div><span class="text-[var(--accent)]">NAME:</span> <span id="statName" class="text-white truncate block">...</span></div>
                         <div><span class="text-[var(--accent)]">SIZE:</span> <span id="statSize" class="text-white">...</span></div>
@@ -214,26 +183,24 @@
                     </div>
                 </div>
 
-                <!-- SUBTITLE PANEL (Simple File Only) -->
+                <!-- SUBTITLE -->
                 <div id="subPanel" class="mt-4 hidden bg-black/20 p-4 rounded-lg border border-white/5 data-box">
                     <label class="text-xs text-[var(--secondary)] uppercase font-bold flex items-center gap-2">
-                        <i class="fa-solid fa-file-lines"></i> Upload Subtitle File (.srt)
+                        <i class="fa-solid fa-file-lines"></i> Upload Subtitle (.srt)
                     </label>
-                    <input type="file" id="subInput" accept=".srt" class="w-full bg-black/30 border border-white/10 p-2 rounded mt-2 text-sm text-gray-300 focus:border-[var(--secondary)] outline-none transition">
+                    <input type="file" id="subInput" accept=".srt" class="w-full bg-black/30 border border-white/10 p-2 rounded mt-2 text-sm text-gray-300">
                 </div>
             </div>
 
-            <!-- CONTROLS ZONE -->
-            <div class="bg-white/5 border border-white/10 p-6 rounded-2xl reveal-right flex flex-col justify-between scanline-card">
+            <!-- CONTROLS -->
+            <div class="bg-white/5 border border-white/10 p-6 rounded-2xl reveal-right flex flex-col justify-between">
                 <div class="space-y-4 z-10 relative">
-                    <!-- Option 1: Compress -->
-                    <label class="flex items-center justify-between p-4 bg-black/20 rounded-lg cursor-pointer hover:bg-black/30 transition border border-transparent hover:border-[var(--accent)]/30">
+                    <label class="flex items-center justify-between p-4 bg-black/20 rounded-lg cursor-pointer hover:bg-black/30 transition">
                         <span class="font-bold text-sm"><i class="fa-solid fa-compress mr-2 text-[var(--accent)]"></i> Turbo Compress</span>
                         <input type="checkbox" id="optCompress" class="w-5 h-5 accent-[var(--accent)]">
                     </label>
 
-                    <!-- Option 2: Convert -->
-                    <div class="bg-black/20 rounded-lg p-4 border border-transparent hover:border-yellow-400/30 transition">
+                    <div class="bg-black/20 rounded-lg p-4">
                         <label class="flex items-center justify-between cursor-pointer mb-2">
                             <span class="font-bold text-sm"><i class="fa-solid fa-rotate mr-2 text-yellow-400"></i> Format Shift</span>
                             <input type="checkbox" id="optConvert" class="w-5 h-5 accent-yellow-400" onchange="toggleFormat()">
@@ -245,8 +212,7 @@
                         </select>
                     </div>
 
-                    <!-- Option 3: Subtitles -->
-                    <label class="flex items-center justify-between p-4 bg-black/20 rounded-lg cursor-pointer hover:bg-black/30 transition border border-transparent hover:border-[var(--secondary)]/30">
+                    <label class="flex items-center justify-between p-4 bg-black/20 rounded-lg cursor-pointer hover:bg-black/30 transition">
                         <span class="font-bold text-sm"><i class="fa-solid fa-closed-captioning mr-2 text-[var(--secondary)]"></i> Burn Subtitles</span>
                         <input type="checkbox" id="optSub" class="w-5 h-5 accent-[var(--secondary)]" onchange="toggleSub()">
                     </label>
@@ -261,58 +227,11 @@
         </div>
     </section>
 
-    <!-- FEATURES (FLYING CARDS) -->
-    <section id="features" class="py-20 px-4 bg-gradient-to-b from-[var(--bg-dark)] to-[#111]">
-        <div class="max-w-7xl mx-auto">
-            <h2 class="text-3xl font-bold text-center mb-20 tech-font">SYSTEM CAPABILITIES</h2>
-            
-            <div class="grid md:grid-cols-3 gap-8">
-                <!-- Card 1 -->
-                <div class="feature-card reveal-left bg-white/5 p-8 rounded-xl border border-white/5 hover:border-[var(--accent)] transition group h-64 relative overflow-hidden">
-                    <i class="fa-solid fa-weight-hanging text-4xl text-[var(--accent)] mb-4 block"></i>
-                    <h3 class="text-xl font-bold mb-2">Turbo Compression</h3>
-                    <p class="text-sm text-gray-400 font-mono">Reduce file size by up to 80% using ultrafast algorithms.</p>
-                </div>
-                <!-- Card 2 -->
-                <div class="feature-card reveal-up bg-white/5 p-8 rounded-xl border border-white/5 hover:border-yellow-400 transition group h-64 relative overflow-hidden">
-                    <i class="fa-solid fa-arrows-rotate text-4xl text-yellow-400 mb-4 block"></i>
-                    <h3 class="text-xl font-bold mb-2">Universal Shift</h3>
-                    <p class="text-sm text-gray-400 font-mono">Convert MP4, WEBM, AVI instantly. Zero compatibility issues.</p>
-                </div>
-                <!-- Card 3 -->
-                <div class="feature-card reveal-right bg-white/5 p-8 rounded-xl border border-white/5 hover:border-[var(--secondary)] transition group h-64 relative overflow-hidden">
-                    <i class="fa-solid fa-closed-captioning text-4xl text-[var(--secondary)] mb-4 block"></i>
-                    <h3 class="text-xl font-bold mb-2">Hard-Burn Subs</h3>
-                    <p class="text-sm text-gray-400 font-mono">Permanently embed SRT subtitles into video frames.</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- FAQ -->
-    <section id="faq" class="py-20 px-4 max-w-3xl mx-auto">
-        <h2 class="text-3xl font-bold text-center mb-12 tech-font">SYSTEM FAQ</h2>
-        <div class="space-y-4">
-            <div class="accordion-item bg-white/5 border border-white/10 rounded-lg overflow-hidden">
-                <button onclick="toggleAccordion(this)" class="w-full flex justify-between p-4 font-bold hover:bg-white/5">
-                    <span>How do I use this?</span> <i class="fa-solid fa-chevron-down accordion-icon"></i>
-                </button>
-                <div class="accordion-content px-4 text-sm text-gray-400">1. Drop Video. 2. Select Options. 3. Click Initialize.</div>
-            </div>
-            <div class="accordion-item bg-white/5 border border-white/10 rounded-lg overflow-hidden">
-                <button onclick="toggleAccordion(this)" class="w-full flex justify-between p-4 font-bold hover:bg-white/5">
-                    <span>Is it private?</span> <i class="fa-solid fa-chevron-down accordion-icon"></i>
-                </button>
-                <div class="accordion-content px-4 text-sm text-gray-400">Yes. Everything happens on your device via WebAssembly. Nothing is uploaded.</div>
-            </div>
-        </div>
-    </section>
-
-    <!-- PROGRESS / RESULT MODAL -->
+    <!-- PROGRESS / REPORT MODAL -->
     <div id="progressModal" class="modal-overlay">
         <div class="bg-[#111] border border-[var(--accent)] p-8 rounded-2xl w-full max-w-sm text-center relative shadow-[0_0_50px_rgba(0,255,204,0.2)] mx-4">
             
-            <!-- State 1: Processing -->
+            <!-- PROCESSING STATE -->
             <div id="modalProcess">
                 <i class="fa-solid fa-gear fa-spin text-4xl text-[var(--accent)] mb-4"></i>
                 <h3 class="text-xl font-bold text-white mb-1 tech-font">PROCESSING...</h3>
@@ -321,7 +240,7 @@
                 <p id="progressText" class="mt-2 text-[var(--accent)] font-bold mono-font">0%</p>
             </div>
 
-            <!-- State 2: Success Report -->
+            <!-- SUCCESS REPORT STATE -->
             <div id="modalSuccess" class="hidden">
                 <i class="fa-solid fa-circle-check text-5xl text-green-500 mb-4 animate-bounce"></i>
                 <h3 class="text-xl font-bold text-white mb-4 tech-font">MISSION COMPLETE</h3>
@@ -343,18 +262,43 @@
         </div>
     </div>
 
+    <!-- FEATURES -->
+    <section id="features" class="py-20 px-4 bg-gradient-to-b from-[var(--bg-dark)] to-[#111]">
+        <div class="max-w-7xl mx-auto">
+            <h2 class="text-3xl font-bold text-center mb-20 tech-font">SYSTEM CAPABILITIES</h2>
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="bg-white/5 p-8 rounded-xl border border-white/5 hover:border-[var(--accent)] transition h-64 reveal-left">
+                    <i class="fa-solid fa-weight-hanging text-4xl text-[var(--accent)] mb-4 block"></i>
+                    <h3 class="text-xl font-bold mb-2">Turbo Compression</h3>
+                    <p class="text-sm text-gray-400 font-mono">Reduce file size by up to 80% using ultrafast algorithms.</p>
+                </div>
+                <div class="bg-white/5 p-8 rounded-xl border border-white/5 hover:border-yellow-400 transition h-64 reveal-up">
+                    <i class="fa-solid fa-arrows-rotate text-4xl text-yellow-400 mb-4 block"></i>
+                    <h3 class="text-xl font-bold mb-2">Universal Shift</h3>
+                    <p class="text-sm text-gray-400 font-mono">Convert MP4, WEBM, AVI instantly.</p>
+                </div>
+                <div class="bg-white/5 p-8 rounded-xl border border-white/5 hover:border-[var(--secondary)] transition h-64 reveal-right">
+                    <i class="fa-solid fa-closed-captioning text-4xl text-[var(--secondary)] mb-4 block"></i>
+                    <h3 class="text-xl font-bold mb-2">Hard-Burn Subs</h3>
+                    <p class="text-sm text-gray-400 font-mono">Embed subtitles permanently into video.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- FOOTER -->
     <footer class="border-t border-white/10 bg-black py-8 text-center text-xs text-gray-500">
         <p>&copy; 2025 TranscodeHub.</p>
     </footer>
 
     <script>
-        // --- PRELOADER ---
-        window.onload = () => {
+        // --- PRELOADER (REMOVES OPACITY ON LOAD) ---
+        window.addEventListener('load', () => {
             const pre = document.getElementById('preloader');
+            document.body.classList.remove('opacity-0');
             pre.style.opacity = '0';
             setTimeout(() => pre.remove(), 500);
-        }
+        });
 
         // --- UI HELPER FUNCTIONS ---
         function toggleMenu() {
@@ -362,23 +306,15 @@
             document.getElementById('hamBtn').classList.toggle('nav-active');
         }
         function toggleTheme() { document.body.classList.toggle('light-mode'); }
-        
         function toggleFormat() {
             const chk = document.getElementById('optConvert');
             const sel = document.getElementById('formatSelect');
             sel.style.opacity = chk.checked ? '1' : '0.5';
             sel.style.pointerEvents = chk.checked ? 'all' : 'none';
         }
-
         function toggleSub() {
-            const div = document.getElementById('subPanel');
-            div.classList.toggle('hidden');
+            document.getElementById('subPanel').classList.toggle('hidden');
         }
-
-        function toggleAccordion(btn) {
-            btn.parentElement.classList.toggle('active');
-        }
-
         function formatBytes(bytes, decimals = 2) {
             if (!+bytes) return '0 Bytes';
             const k = 1024;
@@ -388,18 +324,15 @@
             return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
         }
 
-        // --- FILE INPUT LOGIC ---
+        // --- FILE INTELLIGENCE ---
         let originalFileSize = 0;
-
         document.getElementById('videoInput').addEventListener('change', function() {
             const file = this.files[0];
             if(file) {
                 originalFileSize = file.size;
-                // Update UI Icon
                 document.getElementById('dropIcon').className = "fa-solid fa-file-video text-5xl text-[var(--accent)] mb-4";
                 document.getElementById('dropText').innerText = "File Selected";
                 
-                // Show Stats Box
                 document.getElementById('fileStats').classList.remove('hidden');
                 document.getElementById('statName').innerText = file.name;
                 document.getElementById('statSize').innerText = formatBytes(file.size);
@@ -407,7 +340,7 @@
             }
         });
 
-        // --- ANIMATION OBSERVER ---
+        // --- ANIMATIONS ---
         const observer = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
                 if(entry.isIntersecting) entry.target.classList.add('visible');
@@ -424,7 +357,7 @@
             slides[idx].classList.add('active');
         }, 4000);
 
-        // --- FFMPEG ENGINE (TURBO MODE) ---
+        // --- FFMPEG ENGINE (TURBO) ---
         const { createFFmpeg, fetchFile } = FFmpeg;
         const ffmpeg = createFFmpeg({ log: true });
 
@@ -436,7 +369,7 @@
 
             if(!videoFile) { alert("Please select a video."); return; }
 
-            // SETUP MODAL
+            // MODAL UI SETUP
             const modal = document.getElementById('progressModal');
             const procView = document.getElementById('modalProcess');
             const succView = document.getElementById('modalSuccess');
@@ -461,18 +394,17 @@
                 const fileName = videoFile.name;
                 ffmpeg.FS('writeFile', fileName, await fetchFile(videoFile));
 
-                // BUILD COMMAND - Using ULTRAFAST preset for speed
                 let command = ['-i', fileName];
                 let outputName = 'output_' + fileName;
 
-                // 1. Compression (CRF + Ultrafast)
+                // 1. TURBO COMPRESSION
                 if(compress) {
                     command.push('-vcodec', 'libx264');
                     command.push('-crf', '28'); 
-                    command.push('-preset', 'ultrafast'); // SPEED BOOST
+                    command.push('-preset', 'ultrafast'); 
                 }
 
-                // 2. Subtitles
+                // 2. SUBTITLES
                 if(sub) {
                     const subFile = document.getElementById('subInput').files[0];
                     if(subFile) {
@@ -481,7 +413,7 @@
                     }
                 }
 
-                // 3. Convert
+                // 3. CONVERT
                 if(convert) {
                     const fmt = document.getElementById('formatSelect').value;
                     outputName = `converted.${fmt}`;
@@ -489,15 +421,14 @@
 
                 command.push(outputName);
 
-                // RUN
                 await ffmpeg.run(...command);
 
-                // CALCULATE RESULTS
+                // --- GENERATE REPORT ---
                 const data = ffmpeg.FS('readFile', outputName);
                 const finalSize = data.byteLength;
                 const reduction = originalFileSize > 0 ? ((originalFileSize - finalSize) / originalFileSize * 100).toFixed(1) : 0;
 
-                // SHOW SUCCESS REPORT
+                // SHOW SUCCESS
                 procView.classList.add('hidden');
                 succView.classList.remove('hidden');
                 
@@ -505,7 +436,6 @@
                 document.getElementById('resNew').innerText = formatBytes(finalSize);
                 document.getElementById('resPercent').innerText = reduction > 0 ? `-${reduction}%` : '0%';
 
-                // SETUP DOWNLOAD
                 const url = URL.createObjectURL(new Blob([data.buffer], { type: 'video/mp4' }));
                 const btn = document.getElementById('downloadBtn');
                 btn.onclick = () => {
@@ -517,7 +447,7 @@
 
             } catch(e) {
                 console.error(e);
-                alert("Processing Error. Ensure 'coi-serviceworker.js' is active.");
+                alert("Error. Ensure 'coi-serviceworker.js' is loaded.");
                 modal.classList.remove('open');
             }
         }
@@ -535,9 +465,8 @@
             });
         });
         
-        // --- SERVICE WORKER ---
         if('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('coi-serviceworker.js'); // Register COI as main SW
+            navigator.serviceWorker.register('coi-serviceworker.js');
         }
     </script>
 </body>
