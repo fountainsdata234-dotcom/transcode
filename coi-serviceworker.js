@@ -1,4 +1,3 @@
-/*! coi-serviceworker v0.1.7 */
 let coepCredentialless = false;
 if (typeof window === "undefined") {
   self.addEventListener("install", () => self.skipWaiting());
