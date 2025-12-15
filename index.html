@@ -1,473 +1,965 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>TranscodeHub | Ultimate Video Evolution</title>
-    
-    <!-- SEO -->
-    <meta name="description" content="Compress and Convert videos locally. Privacy-first video tools.">
-    <meta name="theme-color" content="#050505">
-    
-    <!-- FAVICON -->
-    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='80' x='0' y='10' rx='10' fill='%2300ffcc'/%3E%3Cpath d='M30 0 L40 20 H60 L70 0' stroke='%2300ffcc' stroke-width='5' fill='none'/%3E%3C/svg%3E">
-    <link rel="manifest" href="manifest.json">
+<html lang="en" class="scroll-smooth">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TranscodeHub | Ultra</title>
 
-    <!-- MAGICAL FIX FOR GITHUB PAGES / LIVE SERVER -->
+    <!-- Service Worker Fix -->
     <script src="coi-serviceworker.js"></script>
 
-    <!-- LIBRARIES -->
+    <!-- Google Fonts -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600&family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Libraries -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- FFmpeg Core -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <script src="https://unpkg.com/vanilla-tilt@1.7.0/dist/vanilla-tilt.min.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
+    />
+
+    <!-- FFmpeg Stable -->
     <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.11.6/dist/ffmpeg.min.js"></script>
 
-    <!-- FONTS -->
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Share+Tech+Mono&family=Inter:wght@300;500;700&display=swap" rel="stylesheet">
+    <script>
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              cyber: "#00f3ff", // Cyan
+              plasma: "#bc13fe", // Purple
+              void: "#050508",
+              panel: "rgba(15, 15, 20, 0.7)",
+            },
+            fontFamily: {
+              sans: ["Inter", "sans-serif"],
+              headers: ["Orbitron", "sans-serif"],
+              mono: ["Share Tech Mono", "monospace"],
+            },
+            boxShadow: {
+              glow: "0 0 20px rgba(0, 243, 255, 0.2)",
+              "glow-strong": "0 0 40px rgba(0, 243, 255, 0.4)",
+              "glow-red": "0 0 20px rgba(255, 0, 80, 0.4)",
+            },
+            backgroundImage: {
+              "grid-pattern":
+                "linear-gradient(to right, #1f1f1f 1px, transparent 1px), linear-gradient(to bottom, #1f1f1f 1px, transparent 1px)",
+            },
+          },
+        },
+      };
+    </script>
 
     <style>
-        /* --- THEME --- */
-        :root {
-            --bg-dark: #050505;
-            --text-dark: #ffffff;
-            --accent: #00ffcc; /* Teal */
-            --secondary: #ff0055; /* Pink */
-        }
+      body {
+        background-color: #050508;
+        color: #eee;
+        overflow-x: hidden;
+      }
 
-        body.light-mode {
-            --bg-dark: #eef2f6;
-            --text-dark: #111827;
-            --accent: #2563eb;
-            --secondary: #db2777;
-        }
+      /* Loader */
+      #app-loader {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        background: #000;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+      }
 
-        body {
-            background-color: var(--bg-dark);
-            color: var(--text-dark);
-            font-family: 'Inter', sans-serif;
-            overflow-x: hidden;
-            transition: background-color 0.3s;
-        }
+      /* Glassmorphism */
+      .glass-panel {
+        background: rgba(10, 10, 12, 0.6);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+      }
 
-        h1, h2, h3, .tech-font { font-family: 'Orbitron', sans-serif; }
-        .mono-font { font-family: 'Share Tech Mono', monospace; }
+      /* Responsive TV Frame */
+      .cyber-frame {
+        position: relative;
+        background: #000;
+        border: 2px solid #333;
+        box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.9);
+        overflow: hidden;
+        /* Responsive Aspect Ratio */
+        width: 100%;
+        aspect-ratio: 16/9;
+      }
+      /* Corner Accents */
+      .corner {
+        position: absolute;
+        width: 20px;
+        height: 20px;
+        border: 2px solid #00f3ff;
+        transition: 0.3s;
+      }
+      .tl {
+        top: 0;
+        left: 0;
+        border-right: 0;
+        border-bottom: 0;
+      }
+      .tr {
+        top: 0;
+        right: 0;
+        border-left: 0;
+        border-bottom: 0;
+      }
+      .bl {
+        bottom: 0;
+        left: 0;
+        border-right: 0;
+        border-top: 0;
+      }
+      .br {
+        bottom: 0;
+        right: 0;
+        border-left: 0;
+        border-top: 0;
+      }
+      .cyber-frame:hover .corner {
+        width: 30px;
+        height: 30px;
+        box-shadow: 0 0 10px #00f3ff;
+      }
 
-        /* PRELOADER (Now covers the screen instead of hiding body) */
-        #preloader {
-            position: fixed; inset: 0; background: #000; z-index: 9999;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
-            transition: opacity 0.5s ease;
-        }
+      /* Custom Scrollbar */
+      ::-webkit-scrollbar {
+        width: 6px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #000;
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #333;
+        border-radius: 3px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #00f3ff;
+      }
 
-        /* ANIMATIONS */
-        .reveal-left { opacity: 0; transform: translateX(-50px); transition: 0.8s; }
-        .reveal-right { opacity: 0; transform: translateX(50px); transition: 0.8s; }
-        .reveal-up { opacity: 0; transform: translateY(30px); transition: 0.8s; }
-        .visible { opacity: 1; transform: translateX(0) translateY(0); }
+      /* Toggle Switch */
+      .toggle-checkbox:checked {
+        right: 0;
+        border-color: #00f3ff;
+      }
+      .toggle-checkbox:checked + .toggle-label {
+        background-color: #00f3ff;
+      }
 
-        /* TV LOGO */
-        .tv-container {
-            position: relative; width: 40px; height: 30px; 
-            border: 2px solid var(--accent); border-radius: 4px;
-            box-shadow: 0 0 10px var(--accent); animation: flicker 3s infinite;
-        }
-        .tv-antenna {
-            position: absolute; top: -10px; left: 50%; width: 2px; height: 10px; 
-            background: var(--accent); transform: rotate(-30deg);
-        }
-        .tv-antenna:nth-child(2) { transform: rotate(30deg); }
-        
-        @keyframes flicker {
-            0%, 100% { opacity: 1; box-shadow: 0 0 10px var(--accent); }
-            50% { opacity: 0.8; } 52% { opacity: 0.4; } 54% { opacity: 1; }
-        }
-
-        /* CAROUSEL */
-        .carousel-slide { position: absolute; inset: 0; opacity: 0; transition: opacity 1.5s; background-size: cover; background-position: center; }
-        .carousel-slide.active { opacity: 0.5; }
-
-        /* MENU */
-        .menu-overlay { transform: translateY(-100%); transition: transform 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55); }
-        .menu-overlay.open { transform: translateY(0); }
-        .ham-line { transition: 0.3s; transform-origin: center; }
-        .nav-active .ham-line:nth-child(1) { transform: translateY(8px) rotate(45deg); }
-        .nav-active .ham-line:nth-child(2) { opacity: 0; }
-        .nav-active .ham-line:nth-child(3) { transform: translateY(-8px) rotate(-45deg); }
-
-        /* MODAL */
-        .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.95); z-index: 100; display: flex; align-items: center; justify-content: center; opacity: 0; pointer-events: none; transition: 0.3s; }
-        .modal-overlay.open { opacity: 1; pointer-events: all; }
-        .progress-bar { width: 100%; height: 6px; background: #333; border-radius: 99px; overflow: hidden; margin-top: 15px; }
-        .progress-fill { height: 100%; background: var(--accent); width: 0%; transition: width 0.2s linear; box-shadow: 0 0 15px var(--accent); }
-
-        /* FILE STATS BOX */
-        .data-box { border-left: 4px solid var(--accent); background: rgba(0,0,0,0.3); padding: 10px; margin-top: 15px; border-radius: 4px; animation: slideIn 0.5s ease; }
-        @keyframes slideIn { from { opacity: 0; transform: translateX(-20px); } to { opacity: 1; transform: translateX(0); } }
+      /* Mobile Menu Animation */
+      .mobile-menu-overlay {
+        clip-path: circle(0% at 0% 0%);
+        transition: clip-path 0.7s cubic-bezier(0.77, 0, 0.175, 1);
+      }
+      .mobile-menu-overlay.active {
+        clip-path: circle(150% at 0% 0%);
+      }
     </style>
-</head>
-<body>
-
-    <!-- PRELOADER (COVERS SCREEN INSTEAD OF HIDING BODY) -->
-    <div id="preloader">
-        <div class="tv-container mb-4" style="transform: scale(2);">
-            <div class="tv-antenna"></div><div class="tv-antenna"></div>
-        </div>
-        <p class="mono-font text-[var(--accent)] tracking-[0.5em] text-xs animate-pulse">SYSTEM BOOT...</p>
+  </head>
+  <body>
+    <!-- Loading Screen -->
+    <div id="app-loader">
+      <div class="relative w-24 h-24 mb-4">
+        <div
+          class="absolute inset-0 border-4 border-cyber/20 rounded-full"
+        ></div>
+        <div
+          class="absolute inset-0 border-4 border-cyber rounded-full border-t-transparent animate-spin"
+        ></div>
+        <i
+          class="fas fa-microchip absolute inset-0 flex items-center justify-center text-cyber text-2xl animate-pulse"
+        ></i>
+      </div>
+      <h2 class="font-headers text-2xl tracking-widest text-white">
+        SYSTEM <span class="text-cyber">BOOT</span>
+      </h2>
+      <p class="font-mono text-gray-500 text-sm mt-2">Loading WASM Core...</p>
     </div>
 
-    <!-- HEADER -->
-    <header class="fixed top-0 w-full z-50 bg-black/60 backdrop-blur-md border-b border-white/10 h-16 flex items-center justify-between px-4 lg:px-8">
-        <button onclick="toggleMenu()" id="hamBtn" class="w-8 h-8 flex flex-col justify-between py-1.5 z-50 group">
-            <div class="ham-line w-full h-0.5 bg-white group-hover:bg-[var(--accent)]"></div>
-            <div class="ham-line w-full h-0.5 bg-white group-hover:bg-[var(--accent)]"></div>
-            <div class="ham-line w-full h-0.5 bg-white group-hover:bg-[var(--accent)]"></div>
+    <!-- Background -->
+    <canvas id="bg-canvas" class="fixed inset-0 z-[-1] opacity-60"></canvas>
+    <div
+      class="fixed inset-0 z-[-1] bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImEiIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTTAgNDBMMzAgMEgyMGwtMjAgNDB6bTQwIDBMMzAgMEgyMGwyMCA0MHoiIGZpbGw9IiMzMzMiIGZpbGwtb3BhY2l0eT0iMC4wNSIvPjwvcGF0dGVybj48L2RlZnM+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNhKSIvPjwvc3ZnPg==')] opacity-20"
+    ></div>
+
+    <!-- Navbar -->
+    <nav
+      class="fixed top-0 w-full z-50 px-4 md:px-8 py-4 glass-panel border-b-0"
+    >
+      <div class="max-w-7xl mx-auto flex justify-between items-center">
+        <!-- Logo -->
+        <div class="flex items-center gap-3 group cursor-pointer">
+          <div
+            class="relative w-10 h-10 bg-cyber/10 rounded border border-cyber flex items-center justify-center overflow-hidden"
+          >
+            <div
+              class="absolute inset-0 bg-cyber/20 translate-y-full group-hover:translate-y-0 transition duration-300"
+            ></div>
+            <i class="fas fa-bolt text-cyber text-xl relative z-10"></i>
+          </div>
+          <div class="flex flex-col">
+            <span
+              class="font-headers font-bold text-lg leading-none tracking-wider text-white"
+              >TRANSCODE<span class="text-cyber">HUB</span></span
+            >
+            <span class="font-mono text-[10px] text-gray-400"
+              >V.2.4.0 STABLE</span
+            >
+          </div>
+        </div>
+
+        <!-- Hamburger -->
+        <button
+          id="menu-btn"
+          class="z-50 w-10 h-10 flex flex-col justify-center gap-1.5 group"
+        >
+          <span
+            class="block w-8 h-0.5 bg-white transition-transform group-hover:bg-cyber origin-right"
+            id="bar1"
+          ></span>
+          <span
+            class="block w-6 h-0.5 bg-white transition-transform group-hover:bg-cyber ml-auto"
+            id="bar2"
+          ></span>
+          <span
+            class="block w-8 h-0.5 bg-white transition-transform group-hover:bg-cyber origin-right"
+            id="bar3"
+          ></span>
         </button>
+      </div>
+    </nav>
 
-        <div class="flex items-center gap-2">
-            <div class="tv-container"><div class="tv-antenna"></div><div class="tv-antenna"></div></div>
-            <span class="tech-font text-xl tracking-wider font-bold">TRANSCODE<span style="color:var(--accent)">HUB</span></span>
-        </div>
-
-        <button onclick="toggleTheme()" class="w-8 h-8 rounded-full border border-white/20 flex items-center justify-center hover:bg-white/10">
-            <i class="fa-solid fa-lightbulb text-yellow-400"></i>
-        </button>
-    </header>
-
-    <!-- MENU -->
-    <div class="menu-overlay fixed inset-0 z-40 bg-[var(--bg-dark)] flex flex-col items-center justify-center gap-8 text-2xl font-bold tech-font">
-        <a href="#home" onclick="toggleMenu()" class="hover:text-[var(--accent)] hover:scale-110 transition">HOME</a>
-        <a href="#tools" onclick="toggleMenu()" class="hover:text-[var(--accent)] hover:scale-110 transition">TOOLS</a>
-        <a href="#faq" onclick="toggleMenu()" class="hover:text-[var(--accent)] hover:scale-110 transition">FAQ</a>
-        <button id="installAppBtn" class="hidden text-sm border border-[var(--accent)] text-[var(--accent)] px-6 py-2 rounded-full">INSTALL APP</button>
+    <!-- Mobile Menu -->
+    <div
+      id="mobile-menu"
+      class="mobile-menu-overlay fixed inset-0 bg-void z-40 flex flex-col justify-center items-center gap-8 glass-panel"
+    >
+      <a
+        href="#"
+        class="font-headers text-4xl hover:text-cyber hover:tracking-widest transition-all"
+        >HOME</a
+      >
+      <a
+        href="#studio"
+        class="font-headers text-4xl hover:text-cyber hover:tracking-widest transition-all"
+        >STUDIO</a
+      >
+      <a
+        href="#guide"
+        class="font-headers text-4xl hover:text-cyber hover:tracking-widest transition-all"
+        >GUIDE</a
+      >
     </div>
 
-    <!-- HERO -->
-    <section id="home" class="relative h-screen flex items-center justify-center overflow-hidden">
-        <div class="carousel-slide active" style="background-image: url('https://images.unsplash.com/photo-1535016120720-40c6874c3b1c?auto=format&fit=crop&w=1920&q=80')"></div>
-        <div class="carousel-slide" style="background-image: url('https://images.unsplash.com/photo-1518770660439-4636190af475?auto=format&fit=crop&w=1920&q=80')"></div>
-        <div class="absolute inset-0 bg-gradient-to-t from-[var(--bg-dark)] via-black/60 to-black/30"></div>
-
-        <div class="relative z-10 text-center px-4 max-w-3xl">
-            <div class="inline-block px-3 py-1 border border-[var(--accent)] text-[var(--accent)] text-xs font-bold tracking-[0.3em] mb-4 animate-pulse">v4.0 TURBO</div>
-            <h1 class="text-4xl md:text-7xl font-black mb-6 leading-tight drop-shadow-2xl">
-                REDEFINE YOUR <br> <span class="text-transparent bg-clip-text bg-gradient-to-r from-[var(--accent)] to-blue-500">VIDEO REALITY</span>
-            </h1>
-            <p class="text-gray-300 text-sm md:text-lg mb-8">Turbo Engine. Detailed Analytics. 100% Private.</p>
-            <a href="#tools" class="inline-block bg-[var(--accent)] text-black px-8 py-3 font-bold uppercase rounded skew-x-[-10deg] hover:skew-x-0 transition">
-                <span class="skew-x-[10deg] inline-block">Start Processing</span>
-            </a>
+    <!-- Main Content -->
+    <main class="pt-32 pb-20 px-4 md:px-8 max-w-7xl mx-auto">
+      <!-- Hero Section -->
+      <div class="grid md:grid-cols-2 gap-12 items-center mb-24">
+        <div class="space-y-6">
+          <div
+            class="inline-block px-3 py-1 border border-cyber/30 bg-cyber/5 rounded text-cyber text-xs font-mono mb-2 animate-pulse"
+          >
+            ● BROWSER-BASED PROCESSING
+          </div>
+          <h1
+            class="font-headers text-5xl md:text-7xl font-black text-white leading-tight"
+          >
+            COMPRESS <br />
+            <span
+              class="text-transparent bg-clip-text bg-gradient-to-r from-cyber to-blue-600"
+              >WITHOUT LIMITS</span
+            >
+          </h1>
+          <p
+            class="font-mono text-gray-400 text-sm md:text-base max-w-md leading-relaxed"
+          >
+            High-performance video engine powered by WebAssembly. No upload
+            limits. No server wait times. 100% Privacy.
+          </p>
+          <div class="flex gap-4 pt-4">
+            <button
+              onclick="document.getElementById('studio').scrollIntoView()"
+              class="px-8 py-3 bg-cyber text-void font-bold font-headers skew-x-[-10deg] hover:bg-white hover:shadow-glow transition"
+            >
+              <span class="block skew-x-[10deg]">START ENGINE</span>
+            </button>
+            <button
+              onclick="document.getElementById('guide').scrollIntoView()"
+              class="px-8 py-3 border border-gray-600 text-white font-bold font-headers skew-x-[-10deg] hover:border-cyber hover:text-cyber transition"
+            >
+              <span class="block skew-x-[10deg]">TUTORIAL</span>
+            </button>
+          </div>
         </div>
-    </section>
 
-    <!-- TOOLS -->
-    <section id="tools" class="py-20 px-4 max-w-6xl mx-auto min-h-screen">
-        <h2 class="text-3xl md:text-5xl font-bold text-center mb-16 tech-font reveal-up">COMMAND CENTER</h2>
+        <!-- 3D Card Display -->
+        <div class="relative h-[400px] w-full hidden md:block" id="hero-gfx">
+          <!-- Cards injected by JS -->
+        </div>
+      </div>
 
-        <div class="grid lg:grid-cols-2 gap-8">
-            <!-- INPUT -->
-            <div class="bg-white/5 border border-white/10 p-6 rounded-2xl reveal-left relative overflow-hidden">
-                <div class="border-2 border-dashed border-white/20 hover:border-[var(--accent)] rounded-xl h-64 flex flex-col items-center justify-center cursor-pointer relative group transition-all z-10">
-                    <input type="file" id="videoInput" accept="video/*" class="absolute inset-0 opacity-0 cursor-pointer z-20">
-                    <i id="dropIcon" class="fa-solid fa-cloud-arrow-up text-5xl text-gray-500 group-hover:text-[var(--accent)] mb-4 transition transform group-hover:scale-110"></i>
-                    <h3 id="dropText" class="text-xl font-bold group-hover:text-[var(--accent)] transition">Drop Video Here</h3>
-                    <p class="text-xs text-gray-400 mt-2">Max 2GB (Browser Limit)</p>
+      <!-- STUDIO SECTION -->
+      <section id="studio" class="scroll-mt-24">
+        <div class="glass-panel rounded-2xl p-1 overflow-hidden relative">
+          <!-- Top Decor -->
+          <div
+            class="h-1 w-full bg-gradient-to-r from-transparent via-cyber to-transparent opacity-50"
+          ></div>
+
+          <div class="grid lg:grid-cols-12 gap-0">
+            <!-- Left Panel: Controls -->
+            <div
+              class="lg:col-span-4 bg-void/50 p-6 md:p-8 border-r border-white/5 space-y-6"
+            >
+              <h3
+                class="font-headers text-xl text-white flex items-center gap-2"
+              >
+                <i class="fas fa-sliders-h text-cyber"></i> CONFIG
+              </h3>
+
+              <!-- File Status -->
+              <div
+                id="file-status"
+                class="hidden p-4 rounded bg-white/5 border-l-2 border-cyber"
+              >
+                <div class="flex justify-between items-start">
+                  <div>
+                    <p class="text-[10px] text-gray-400 font-mono uppercase">
+                      Target File
+                    </p>
+                    <p id="fname" class="text-sm font-bold truncate w-40">
+                      video.mp4
+                    </p>
+                  </div>
+                  <span id="fsize" class="text-cyber font-mono text-xs"
+                    >0MB</span
+                  >
                 </div>
-                
-                <!-- FILE STATS (INTELLIGENCE) -->
-                <div id="fileStats" class="hidden data-box">
-                    <p class="text-xs text-gray-400 uppercase tracking-wider mb-1 font-bold">Source Detected:</p>
-                    <div class="grid grid-cols-2 gap-2 text-sm font-mono">
-                        <div><span class="text-[var(--accent)]">NAME:</span> <span id="statName" class="text-white truncate block">...</span></div>
-                        <div><span class="text-[var(--accent)]">SIZE:</span> <span id="statSize" class="text-white">...</span></div>
-                        <div><span class="text-[var(--accent)]">TYPE:</span> <span id="statType" class="text-white">...</span></div>
+              </div>
+
+              <!-- Options -->
+              <div class="space-y-4">
+                <!-- Compression -->
+                <div
+                  class="group p-4 rounded border border-white/5 hover:border-cyber/30 transition bg-black/20"
+                >
+                  <label
+                    class="flex items-center justify-between cursor-pointer"
+                  >
+                    <span class="font-bold text-sm">Compression</span>
+                    <input
+                      type="checkbox"
+                      id="opt-compress"
+                      class="accent-cyber w-5 h-5"
+                    />
+                  </label>
+                  <p class="text-[10px] text-gray-500 mt-1">
+                    Reduces bitrate (CRF 28).
+                  </p>
+                </div>
+
+                <!-- Speed Mode (CRITICAL FIX) -->
+                <div
+                  class="group p-4 rounded border border-cyber/50 bg-cyber/5 hover:bg-cyber/10 transition"
+                >
+                  <label
+                    class="flex items-center justify-between cursor-pointer"
+                  >
+                    <span class="font-bold text-sm text-cyber"
+                      ><i class="fas fa-bolt mr-1"></i> Turbo Mode (720p)</span
+                    >
+                    <input
+                      type="checkbox"
+                      id="opt-speed"
+                      class="accent-cyber w-5 h-5"
+                      checked
+                    />
+                  </label>
+                  <p class="text-[10px] text-gray-400 mt-1">
+                    Downscales large videos for 5x faster processing.
+                    Recommended for files > 50MB.
+                  </p>
+                </div>
+
+                <!-- Format -->
+                <div
+                  class="group p-4 rounded border border-white/5 hover:border-cyber/30 transition bg-black/20"
+                >
+                  <label
+                    class="flex items-center justify-between cursor-pointer"
+                  >
+                    <span class="font-bold text-sm">Convert Format</span>
+                    <input
+                      type="checkbox"
+                      id="opt-convert"
+                      class="accent-cyber w-5 h-5"
+                      onchange="document.getElementById('fmt-select').classList.toggle('hidden')"
+                    />
+                  </label>
+                  <select
+                    id="fmt-select"
+                    class="hidden mt-2 w-full bg-void border border-gray-700 text-xs p-2 rounded text-gray-300 outline-none focus:border-cyber"
+                  >
+                    <option value="mp4">MP4 (Standard)</option>
+                    <option value="webm">WebM (Web)</option>
+                    <option value="avi">AVI</option>
+                  </select>
+                </div>
+              </div>
+
+              <button
+                id="process-btn"
+                class="w-full py-4 bg-gray-800 text-gray-500 font-headers font-bold rounded cursor-not-allowed transition-all duration-300"
+                disabled
+              >
+                AWAITING INPUT
+              </button>
+            </div>
+
+            <!-- Right Panel: Visualizer -->
+            <div
+              class="lg:col-span-8 p-6 md:p-8 bg-black/40 flex flex-col justify-center"
+            >
+              <div class="cyber-frame group">
+                <!-- Input Layer -->
+                <input
+                  type="file"
+                  id="video-input"
+                  class="absolute inset-0 w-full h-full opacity-0 z-20 cursor-pointer"
+                  accept="video/*"
+                />
+
+                <!-- Decor -->
+                <div class="corner tl"></div>
+                <div class="corner tr"></div>
+                <div class="corner bl"></div>
+                <div class="corner br"></div>
+
+                <!-- STATE 1: IDLE -->
+                <div
+                  id="ui-idle"
+                  class="absolute inset-0 flex flex-col items-center justify-center transition-transform duration-300 group-hover:scale-105 pointer-events-none"
+                >
+                  <i
+                    class="fas fa-cloud-upload-alt text-6xl text-gray-700 mb-4 group-hover:text-cyber transition-colors"
+                  ></i>
+                  <h3 class="font-headers text-2xl">INITIATE UPLOAD</h3>
+                  <p class="font-mono text-xs text-gray-500 mt-2">
+                    DRAG FILE OR CLICK TO SCAN
+                  </p>
+                </div>
+
+                <!-- STATE 2: PROCESSING -->
+                <div
+                  id="ui-process"
+                  class="hidden absolute inset-0 bg-void/90 z-30 flex flex-col items-center justify-center"
+                >
+                  <div class="w-64 relative">
+                    <div
+                      class="flex justify-between font-mono text-xs text-cyber mb-1"
+                    >
+                      <span>ENCODING</span>
+                      <span id="progress-txt">0%</span>
                     </div>
-                </div>
-
-                <!-- SUBTITLE -->
-                <div id="subPanel" class="mt-4 hidden bg-black/20 p-4 rounded-lg border border-white/5 data-box">
-                    <label class="text-xs text-[var(--secondary)] uppercase font-bold flex items-center gap-2">
-                        <i class="fa-solid fa-file-lines"></i> Upload Subtitle (.srt)
-                    </label>
-                    <input type="file" id="subInput" accept=".srt" class="w-full bg-black/30 border border-white/10 p-2 rounded mt-2 text-sm text-gray-300">
-                </div>
-            </div>
-
-            <!-- CONTROLS -->
-            <div class="bg-white/5 border border-white/10 p-6 rounded-2xl reveal-right flex flex-col justify-between">
-                <div class="space-y-4 z-10 relative">
-                    <label class="flex items-center justify-between p-4 bg-black/20 rounded-lg cursor-pointer hover:bg-black/30 transition">
-                        <span class="font-bold text-sm"><i class="fa-solid fa-compress mr-2 text-[var(--accent)]"></i> Turbo Compress</span>
-                        <input type="checkbox" id="optCompress" class="w-5 h-5 accent-[var(--accent)]">
-                    </label>
-
-                    <div class="bg-black/20 rounded-lg p-4">
-                        <label class="flex items-center justify-between cursor-pointer mb-2">
-                            <span class="font-bold text-sm"><i class="fa-solid fa-rotate mr-2 text-yellow-400"></i> Format Shift</span>
-                            <input type="checkbox" id="optConvert" class="w-5 h-5 accent-yellow-400" onchange="toggleFormat()">
-                        </label>
-                        <select id="formatSelect" class="w-full bg-black/50 border border-white/10 rounded p-2 text-sm text-gray-300 opacity-50 pointer-events-none transition">
-                            <option value="mp4">MP4 (Universal)</option>
-                            <option value="webm">WEBM (Web Optimized)</option>
-                            <option value="avi">AVI (Raw Quality)</option>
-                        </select>
+                    <div class="h-1 bg-gray-800 w-full overflow-hidden">
+                      <div
+                        id="progress-bar"
+                        class="h-full bg-cyber w-0 shadow-[0_0_10px_#00f3ff]"
+                      ></div>
                     </div>
+                  </div>
+                  <p
+                    class="font-mono text-[10px] text-gray-500 mt-4 animate-pulse"
+                  >
+                    DO NOT CLOSE WINDOW
+                  </p>
 
-                    <label class="flex items-center justify-between p-4 bg-black/20 rounded-lg cursor-pointer hover:bg-black/30 transition">
-                        <span class="font-bold text-sm"><i class="fa-solid fa-closed-captioning mr-2 text-[var(--secondary)]"></i> Burn Subtitles</span>
-                        <input type="checkbox" id="optSub" class="w-5 h-5 accent-[var(--secondary)]" onchange="toggleSub()">
-                    </label>
+                  <!-- Terminal Log -->
+                  <div
+                    id="terminal"
+                    class="mt-6 w-[80%] h-24 bg-black border border-gray-800 p-2 overflow-y-auto font-mono text-[10px] text-green-500 opacity-80"
+                  >
+                    <div>> System initialized...</div>
+                  </div>
                 </div>
 
-                <div class="mt-8 z-10 relative">
-                    <button onclick="startEngine()" class="w-full bg-gradient-to-r from-[var(--accent)] to-blue-600 text-white py-4 font-bold rounded-lg shadow-lg hover:shadow-[0_0_20px_var(--accent)] transition transform hover:-translate-y-1 tracking-widest text-sm">
-                        INITIALIZE PROCESS
-                    </button>
-                </div>
-            </div>
-        </div>
-    </section>
+                <!-- STATE 3: SUCCESS -->
+                <div
+                  id="ui-success"
+                  class="hidden absolute inset-0 bg-void/95 z-30 flex flex-col items-center justify-center"
+                >
+                  <h2
+                    class="font-headers text-3xl text-cyber mb-6 tracking-widest"
+                  >
+                    TASK COMPLETE
+                  </h2>
 
-    <!-- PROGRESS / REPORT MODAL -->
-    <div id="progressModal" class="modal-overlay">
-        <div class="bg-[#111] border border-[var(--accent)] p-8 rounded-2xl w-full max-w-sm text-center relative shadow-[0_0_50px_rgba(0,255,204,0.2)] mx-4">
-            
-            <!-- PROCESSING STATE -->
-            <div id="modalProcess">
-                <i class="fa-solid fa-gear fa-spin text-4xl text-[var(--accent)] mb-4"></i>
-                <h3 class="text-xl font-bold text-white mb-1 tech-font">PROCESSING...</h3>
-                <p class="text-xs text-gray-400 mb-6 mono-font">Do not close this tab.</p>
-                <div class="progress-bar"><div id="progressFill" class="progress-fill"></div></div>
-                <p id="progressText" class="mt-2 text-[var(--accent)] font-bold mono-font">0%</p>
-            </div>
-
-            <!-- SUCCESS REPORT STATE -->
-            <div id="modalSuccess" class="hidden">
-                <i class="fa-solid fa-circle-check text-5xl text-green-500 mb-4 animate-bounce"></i>
-                <h3 class="text-xl font-bold text-white mb-4 tech-font">MISSION COMPLETE</h3>
-                
-                <div class="bg-white/5 p-4 rounded text-left text-sm font-mono space-y-2 mb-6 border border-white/10">
-                    <div class="flex justify-between"><span>Original:</span> <span id="resOrig" class="text-gray-400">...</span></div>
-                    <div class="flex justify-between"><span>New Size:</span> <span id="resNew" class="text-[var(--accent)]">...</span></div>
-                    <div class="flex justify-between border-t border-white/10 pt-2 mt-2">
-                        <span>Reduced:</span> <span id="resPercent" class="text-green-400 font-bold">...</span>
+                  <div
+                    class="flex items-center gap-8 mb-8 bg-white/5 p-6 rounded border border-white/10"
+                  >
+                    <div class="text-center">
+                      <p class="text-[10px] text-gray-500 uppercase">
+                        Original
+                      </p>
+                      <p
+                        id="res-old"
+                        class="font-mono text-xl text-red-400 line-through"
+                      >
+                        0MB
+                      </p>
                     </div>
-                </div>
+                    <i class="fas fa-chevron-right text-gray-600"></i>
+                    <div class="text-center">
+                      <p class="text-[10px] text-gray-500 uppercase">
+                        Optimized
+                      </p>
+                      <p
+                        id="res-new"
+                        class="font-mono text-3xl text-cyber font-bold"
+                      >
+                        0MB
+                      </p>
+                    </div>
+                  </div>
 
-                <button id="downloadBtn" class="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-3 rounded-lg shadow-lg transition">
-                    DOWNLOAD FILE <i class="fa-solid fa-download ml-2"></i>
-                </button>
-                <button onclick="document.getElementById('progressModal').classList.remove('open')" class="mt-3 text-xs text-gray-500 hover:text-white underline">Close</button>
+                  <button
+                    id="dl-btn"
+                    class="px-8 py-3 bg-cyber text-black font-bold font-headers hover:shadow-glow transition transform hover:scale-105 rounded-sm"
+                  >
+                    DOWNLOAD FILE
+                  </button>
+                  <button
+                    onclick="location.reload()"
+                    class="mt-4 text-xs text-gray-500 hover:text-white underline"
+                  >
+                    Process Another
+                  </button>
+                </div>
+              </div>
             </div>
-
+          </div>
         </div>
-    </div>
+      </section>
 
-    <!-- FEATURES -->
-    <section id="features" class="py-20 px-4 bg-gradient-to-b from-[var(--bg-dark)] to-[#111]">
-        <div class="max-w-7xl mx-auto">
-            <h2 class="text-3xl font-bold text-center mb-20 tech-font">SYSTEM CAPABILITIES</h2>
-            <div class="grid md:grid-cols-3 gap-8">
-                <div class="bg-white/5 p-8 rounded-xl border border-white/5 hover:border-[var(--accent)] transition h-64 reveal-left">
-                    <i class="fa-solid fa-weight-hanging text-4xl text-[var(--accent)] mb-4 block"></i>
-                    <h3 class="text-xl font-bold mb-2">Turbo Compression</h3>
-                    <p class="text-sm text-gray-400 font-mono">Reduce file size by up to 80% using ultrafast algorithms.</p>
-                </div>
-                <div class="bg-white/5 p-8 rounded-xl border border-white/5 hover:border-yellow-400 transition h-64 reveal-up">
-                    <i class="fa-solid fa-arrows-rotate text-4xl text-yellow-400 mb-4 block"></i>
-                    <h3 class="text-xl font-bold mb-2">Universal Shift</h3>
-                    <p class="text-sm text-gray-400 font-mono">Convert MP4, WEBM, AVI instantly.</p>
-                </div>
-                <div class="bg-white/5 p-8 rounded-xl border border-white/5 hover:border-[var(--secondary)] transition h-64 reveal-right">
-                    <i class="fa-solid fa-closed-captioning text-4xl text-[var(--secondary)] mb-4 block"></i>
-                    <h3 class="text-xl font-bold mb-2">Hard-Burn Subs</h3>
-                    <p class="text-sm text-gray-400 font-mono">Embed subtitles permanently into video.</p>
-                </div>
-            </div>
+      <!-- Tutorial / Guide -->
+      <section id="guide" class="py-24 text-center">
+        <h2 class="font-headers text-3xl mb-12">MANUAL OVERRIDE</h2>
+        <div class="max-w-3xl mx-auto cyber-frame p-1 bg-gray-900 aspect-video">
+          <iframe
+            class="w-full h-full"
+            src="https://www.youtube.com/embed/dQw4w9WgXcQ?controls=0"
+            title="Guide"
+            frameborder="0"
+          ></iframe>
         </div>
-    </section>
 
-    <!-- FOOTER -->
-    <footer class="border-t border-white/10 bg-black py-8 text-center text-xs text-gray-500">
-        <p>&copy; 2025 TranscodeHub.</p>
+        <div
+          class="mt-12 grid md:grid-cols-2 gap-6 text-left max-w-4xl mx-auto"
+        >
+          <div
+            class="bg-white/5 p-6 rounded border border-white/5 hover:border-cyber/30 transition"
+          >
+            <h4 class="font-bold text-cyber mb-2">
+              <i class="fas fa-question-circle"></i> Why "Turbo Mode"?
+            </h4>
+            <p class="text-sm text-gray-400">
+              Processing HD video in a browser is slow. Turbo Mode resizes video
+              to 720p, making it 5x-10x faster. Always use this for files >
+              50MB.
+            </p>
+          </div>
+          <div
+            class="bg-white/5 p-6 rounded border border-white/5 hover:border-cyber/30 transition"
+          >
+            <h4 class="font-bold text-cyber mb-2">
+              <i class="fas fa-shield-alt"></i> Is it secure?
+            </h4>
+            <p class="text-sm text-gray-400">
+              Yes. The engine runs locally on your device using WebAssembly. No
+              data is ever sent to a server.
+            </p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-white/10 py-8 text-center bg-black">
+      <p class="font-mono text-xs text-gray-600">
+        TRANSCODEHUB SYSTEMS © 2025 // <span class="text-cyber">ONLINE</span>
+      </p>
     </footer>
 
+    <!-- LOGIC -->
     <script>
-        // --- PRELOADER (REMOVES OPACITY ON LOAD) ---
-        window.addEventListener('load', () => {
-            const pre = document.getElementById('preloader');
-            document.body.classList.remove('opacity-0');
-            pre.style.opacity = '0';
-            setTimeout(() => pre.remove(), 500);
-        });
+      // --- 1. BOOT SEQUENCE & ANIMATIONS ---
 
-        // --- UI HELPER FUNCTIONS ---
-        function toggleMenu() {
-            document.querySelector('.menu-overlay').classList.toggle('open');
-            document.getElementById('hamBtn').classList.toggle('nav-active');
-        }
-        function toggleTheme() { document.body.classList.toggle('light-mode'); }
-        function toggleFormat() {
-            const chk = document.getElementById('optConvert');
-            const sel = document.getElementById('formatSelect');
-            sel.style.opacity = chk.checked ? '1' : '0.5';
-            sel.style.pointerEvents = chk.checked ? 'all' : 'none';
-        }
-        function toggleSub() {
-            document.getElementById('subPanel').classList.toggle('hidden');
-        }
-        function formatBytes(bytes, decimals = 2) {
-            if (!+bytes) return '0 Bytes';
-            const k = 1024;
-            const dm = decimals < 0 ? 0 : decimals;
-            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-            const i = Math.floor(Math.log(bytes) / Math.log(k));
-            return `${parseFloat((bytes / Math.pow(k, i)).toFixed(dm))} ${sizes[i]}`;
-        }
+      // Remove Loader
+      window.onload = () => {
+        setTimeout(() => {
+          const loader = document.getElementById("app-loader");
+          gsap.to(loader, {
+            opacity: 0,
+            duration: 0.8,
+            onComplete: () => loader.remove(),
+          });
 
-        // --- FILE INTELLIGENCE ---
-        let originalFileSize = 0;
-        document.getElementById('videoInput').addEventListener('change', function() {
-            const file = this.files[0];
-            if(file) {
-                originalFileSize = file.size;
-                document.getElementById('dropIcon').className = "fa-solid fa-file-video text-5xl text-[var(--accent)] mb-4";
-                document.getElementById('dropText').innerText = "File Selected";
-                
-                document.getElementById('fileStats').classList.remove('hidden');
-                document.getElementById('statName').innerText = file.name;
-                document.getElementById('statSize').innerText = formatBytes(file.size);
-                document.getElementById('statType').innerText = file.type.split('/')[1].toUpperCase();
+          // Animate Elements In
+          gsap.from("nav", { y: -100, opacity: 0, duration: 1, delay: 0.5 });
+          gsap.from(".hero-content", {
+            x: -50,
+            opacity: 0,
+            duration: 1,
+            delay: 0.8,
+          });
+        }, 1500); // Fake load time for "Pro" feel
+      };
+
+      // Live Particle Network (Optimized)
+      const canvas = document.getElementById("bg-canvas");
+      const ctx = canvas.getContext("2d");
+      let width, height;
+      let mouse = { x: null, y: null };
+
+      const resize = () => {
+        width = canvas.width = window.innerWidth;
+        height = canvas.height = window.innerHeight;
+      };
+      window.addEventListener("resize", resize);
+      window.addEventListener("mousemove", (e) => {
+        mouse.x = e.x;
+        mouse.y = e.y;
+      });
+      resize();
+
+      const particles = Array.from({ length: 60 }, () => ({
+        x: Math.random() * width,
+        y: Math.random() * height,
+        vx: (Math.random() - 0.5) * 0.5,
+        vy: (Math.random() - 0.5) * 0.5,
+        size: Math.random() * 2 + 1,
+      }));
+
+      const animateBG = () => {
+        ctx.clearRect(0, 0, width, height);
+
+        particles.forEach((p, i) => {
+          p.x += p.vx;
+          p.y += p.vy;
+
+          // Bounce
+          if (p.x < 0 || p.x > width) p.vx *= -1;
+          if (p.y < 0 || p.y > height) p.vy *= -1;
+
+          // Draw Point
+          ctx.fillStyle = "#00f3ff";
+          ctx.beginPath();
+          ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+          ctx.fill();
+
+          // Connect to Mouse
+          if (mouse.x) {
+            const dx = p.x - mouse.x;
+            const dy = p.y - mouse.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist < 150) {
+              ctx.strokeStyle = `rgba(0, 243, 255, ${1 - dist / 150})`;
+              ctx.lineWidth = 0.5;
+              ctx.beginPath();
+              ctx.moveTo(p.x, p.y);
+              ctx.lineTo(mouse.x, mouse.y);
+              ctx.stroke();
             }
-        });
+          }
 
-        // --- ANIMATIONS ---
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if(entry.isIntersecting) entry.target.classList.add('visible');
-            });
-        });
-        document.querySelectorAll('.reveal-left, .reveal-right, .reveal-up').forEach(el => observer.observe(el));
-
-        // --- CAROUSEL ---
-        let idx = 0;
-        const slides = document.querySelectorAll('.carousel-slide');
-        setInterval(() => {
-            slides[idx].classList.remove('active');
-            idx = (idx + 1) % slides.length;
-            slides[idx].classList.add('active');
-        }, 4000);
-
-        // --- FFMPEG ENGINE (TURBO) ---
-        const { createFFmpeg, fetchFile } = FFmpeg;
-        const ffmpeg = createFFmpeg({ log: true });
-
-        async function startEngine() {
-            const videoFile = document.getElementById('videoInput').files[0];
-            const compress = document.getElementById('optCompress').checked;
-            const convert = document.getElementById('optConvert').checked;
-            const sub = document.getElementById('optSub').checked;
-
-            if(!videoFile) { alert("Please select a video."); return; }
-
-            // MODAL UI SETUP
-            const modal = document.getElementById('progressModal');
-            const procView = document.getElementById('modalProcess');
-            const succView = document.getElementById('modalSuccess');
-            const fill = document.getElementById('progressFill');
-            const text = document.getElementById('progressText');
-            
-            modal.classList.add('open');
-            procView.classList.remove('hidden');
-            succView.classList.add('hidden');
-            fill.style.width = '0%';
-            text.innerText = 'LOADING ENGINE...';
-
-            try {
-                if(!ffmpeg.isLoaded()) await ffmpeg.load();
-
-                ffmpeg.setProgress(({ ratio }) => {
-                    const pct = Math.round(ratio * 100);
-                    fill.style.width = pct + '%';
-                    text.innerText = `PROCESSING ${pct}%`;
-                });
-
-                const fileName = videoFile.name;
-                ffmpeg.FS('writeFile', fileName, await fetchFile(videoFile));
-
-                let command = ['-i', fileName];
-                let outputName = 'output_' + fileName;
-
-                // 1. TURBO COMPRESSION
-                if(compress) {
-                    command.push('-vcodec', 'libx264');
-                    command.push('-crf', '28'); 
-                    command.push('-preset', 'ultrafast'); 
-                }
-
-                // 2. SUBTITLES
-                if(sub) {
-                    const subFile = document.getElementById('subInput').files[0];
-                    if(subFile) {
-                        ffmpeg.FS('writeFile', 'sub.srt', await fetchFile(subFile));
-                        command.push('-vf', 'subtitles=sub.srt');
-                    }
-                }
-
-                // 3. CONVERT
-                if(convert) {
-                    const fmt = document.getElementById('formatSelect').value;
-                    outputName = `converted.${fmt}`;
-                }
-
-                command.push(outputName);
-
-                await ffmpeg.run(...command);
-
-                // --- GENERATE REPORT ---
-                const data = ffmpeg.FS('readFile', outputName);
-                const finalSize = data.byteLength;
-                const reduction = originalFileSize > 0 ? ((originalFileSize - finalSize) / originalFileSize * 100).toFixed(1) : 0;
-
-                // SHOW SUCCESS
-                procView.classList.add('hidden');
-                succView.classList.remove('hidden');
-                
-                document.getElementById('resOrig').innerText = formatBytes(originalFileSize);
-                document.getElementById('resNew').innerText = formatBytes(finalSize);
-                document.getElementById('resPercent').innerText = reduction > 0 ? `-${reduction}%` : '0%';
-
-                const url = URL.createObjectURL(new Blob([data.buffer], { type: 'video/mp4' }));
-                const btn = document.getElementById('downloadBtn');
-                btn.onclick = () => {
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = outputName;
-                    a.click();
-                };
-
-            } catch(e) {
-                console.error(e);
-                alert("Error. Ensure 'coi-serviceworker.js' is loaded.");
-                modal.classList.remove('open');
+          // Connect to others
+          for (let j = i; j < particles.length; j++) {
+            const p2 = particles[j];
+            const dx = p.x - p2.x;
+            const dy = p.y - p2.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            if (dist < 100) {
+              ctx.strokeStyle = `rgba(0, 243, 255, ${0.2 - dist / 500})`; // Very faint
+              ctx.lineWidth = 0.2;
+              ctx.beginPath();
+              ctx.moveTo(p.x, p.y);
+              ctx.lineTo(p2.x, p2.y);
+              ctx.stroke();
             }
-        }
-
-        // --- PWA INSTALL ---
-        let deferredPrompt;
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault();
-            deferredPrompt = e;
-            const btn = document.getElementById('installAppBtn');
-            btn.classList.remove('hidden');
-            btn.addEventListener('click', () => {
-                deferredPrompt.prompt();
-                deferredPrompt = null;
-            });
+          }
         });
-        
-        if('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('coi-serviceworker.js');
+        requestAnimationFrame(animateBG);
+      };
+      animateBG();
+
+      // 3D Floating Cards (GSAP + Tilt)
+      const heroGfx = document.getElementById("hero-gfx");
+      const images = [
+        "https://images.unsplash.com/photo-1535242208474-9a2793260ca8?w=500&q=80",
+        "https://images.unsplash.com/photo-1614850523459-c2f4c699c52e?w=500&q=80",
+      ];
+
+      images.forEach((src, i) => {
+        const card = document.createElement("div");
+        card.className =
+          "absolute w-48 h-64 rounded-xl bg-cover bg-center border border-cyber/50 shadow-glow";
+        card.style.backgroundImage = `url(${src})`;
+        card.style.top = i * 40 + 50 + "px";
+        card.style.left = i * 60 + 100 + "px";
+        card.style.zIndex = 10 - i;
+        heroGfx.appendChild(card);
+
+        VanillaTilt.init(card, {
+          max: 15,
+          speed: 400,
+          glare: true,
+          "max-glare": 0.4,
+        });
+
+        gsap.from(card, {
+          y: 100,
+          opacity: 0,
+          duration: 1,
+          delay: 1 + i * 0.2,
+        });
+      });
+
+      // Menu Logic
+      let menuOpen = false;
+      const menuBtn = document.getElementById("menu-btn");
+      const mobileMenu = document.getElementById("mobile-menu");
+
+      menuBtn.addEventListener("click", () => {
+        menuOpen = !menuOpen;
+        mobileMenu.classList.toggle("active");
+
+        // Animate Hamburger
+        if (menuOpen) {
+          gsap.to("#bar1", { rotation: 45, y: 8, backgroundColor: "#00f3ff" });
+          gsap.to("#bar2", { opacity: 0 });
+          gsap.to("#bar3", {
+            rotation: -45,
+            y: -8,
+            backgroundColor: "#00f3ff",
+          });
+        } else {
+          gsap.to("#bar1", { rotation: 0, y: 0, backgroundColor: "white" });
+          gsap.to("#bar2", { opacity: 1 });
+          gsap.to("#bar3", { rotation: 0, y: 0, backgroundColor: "white" });
         }
+      });
+
+      document.querySelectorAll("#mobile-menu a").forEach((l) =>
+        l.addEventListener("click", () => {
+          menuOpen = false;
+          mobileMenu.classList.remove("active");
+          gsap.to("#bar1", { rotation: 0, y: 0 });
+          gsap.to("#bar2", { opacity: 1 });
+          gsap.to("#bar3", { rotation: 0, y: 0 });
+        })
+      );
+
+      // --- 2. FFMPEG ENGINE (STABLE VERSION) ---
+
+      const { createFFmpeg, fetchFile } = FFmpeg;
+      let ffmpeg = null;
+      let currentFile = null;
+
+      const uiStates = {
+        idle: document.getElementById("ui-idle"),
+        process: document.getElementById("ui-process"),
+        success: document.getElementById("ui-success"),
+      };
+      const term = document.getElementById("terminal");
+
+      function log(msg) {
+        const line = document.createElement("div");
+        line.textContent = `> ${msg}`;
+        term.appendChild(line);
+        term.scrollTop = term.scrollHeight;
+      }
+
+      async function initEngine() {
+        try {
+          ffmpeg = createFFmpeg({
+            log: true,
+            logger: ({ message }) => {
+              // Filter logs for cleaner UI
+              if (message.includes("frame=")) {
+                // Extract basic status if needed
+              } else {
+                log(message.substring(0, 50) + "...");
+              }
+            },
+            corePath:
+              "https://unpkg.com/@ffmpeg/core@0.11.0/dist/ffmpeg-core.js",
+          });
+
+          await ffmpeg.load();
+          log("CORE ONLINE. READY.");
+        } catch (e) {
+          log("CRITICAL FAILURE: " + e.message);
+          alert("Engine failed to load. Use HTTPS or Localhost.");
+        }
+      }
+
+      // Start engine immediately
+      initEngine();
+
+      // Input Handler
+      document.getElementById("video-input").addEventListener("change", (e) => {
+        const file = e.target.files[0];
+        if (file) {
+          currentFile = file;
+          // Update UI
+          document.getElementById("file-status").classList.remove("hidden");
+          document.getElementById("fname").textContent = file.name;
+          document.getElementById("fsize").textContent =
+            (file.size / (1024 * 1024)).toFixed(2) + " MB";
+
+          // Enable Button
+          const btn = document.getElementById("process-btn");
+          btn.disabled = false;
+          btn.textContent = "INITIALIZE SEQUENCE";
+          btn.classList.remove(
+            "bg-gray-800",
+            "text-gray-500",
+            "cursor-not-allowed"
+          );
+          btn.classList.add(
+            "bg-cyber",
+            "text-black",
+            "hover:shadow-glow",
+            "hover:scale-[1.02]"
+          );
+
+          log(`Target Acquired: ${file.name}`);
+        }
+      });
+
+      // MAIN PROCESS
+      document
+        .getElementById("process-btn")
+        .addEventListener("click", async () => {
+          if (!ffmpeg.isLoaded() || !currentFile) return;
+
+          const speedMode = document.getElementById("opt-speed").checked;
+          const compress = document.getElementById("opt-compress").checked;
+          const convert = document.getElementById("opt-convert").checked;
+          const format = document.getElementById("fmt-select").value;
+
+          // UI Switch
+          uiStates.idle.classList.add("hidden");
+          uiStates.process.classList.remove("hidden");
+          uiStates.process.classList.add("flex");
+
+          try {
+            const inName = "input." + currentFile.name.split(".").pop();
+            const outExt = convert ? format : "mp4";
+            const outName = "output." + outExt;
+
+            // 1. Write File
+            ffmpeg.FS("writeFile", inName, await fetchFile(currentFile));
+            log("File in memory.");
+
+            // 2. Build Arguments
+            let args = ["-i", inName];
+
+            let filters = [];
+
+            // SPEED MODE LOGIC (The Fix for Large Files)
+            if (speedMode) {
+              // Scale to 720p height, keep aspect ratio.
+              // 'trunc(iw/2)*2' ensures even numbers which is required.
+              // But simpler for speed mode: -2:720 ensures width is calculated auto and height is 720
+              // We must ensure dimensions are divisible by 2 for libx264
+              filters.push("scale=-2:720");
+              log("Turbo Mode: Resizing to 720p...");
+            } else {
+              // Still need even numbers or it crashes
+              filters.push("scale=trunc(iw/2)*2:trunc(ih/2)*2");
+            }
+
+            if (filters.length > 0) {
+              args.push("-vf", filters.join(","));
+            }
+
+            // Codec settings
+            args.push("-c:v", "libx264");
+            args.push("-preset", "ultrafast"); // Max speed
+
+            if (compress) {
+              args.push("-crf", "28"); // Higher compression
+            } else if (speedMode) {
+              args.push("-crf", "24"); // Decent quality for resize
+            }
+
+            args.push(outName);
+
+            // 3. Run
+            log("Executing Transcode...");
+
+            // Mock progress bar (FFmpeg doesn't give clean % in v0.11 easily without parsing duration)
+            let fakeProgress = 0;
+            const progInterval = setInterval(() => {
+              fakeProgress += (100 - fakeProgress) / 50;
+              if (fakeProgress > 95) fakeProgress = 95;
+              document.getElementById("progress-bar").style.width =
+                fakeProgress + "%";
+              document.getElementById("progress-txt").textContent =
+                Math.floor(fakeProgress) + "%";
+            }, 500);
+
+            await ffmpeg.run(...args);
+
+            clearInterval(progInterval);
+            document.getElementById("progress-bar").style.width = "100%";
+            document.getElementById("progress-txt").textContent = "100%";
+
+            // 4. Output
+            const data = ffmpeg.FS("readFile", outName);
+
+            // Show Success
+            uiStates.process.classList.add("hidden");
+            uiStates.process.classList.remove("flex");
+            uiStates.success.classList.remove("hidden");
+            uiStates.success.classList.add("flex");
+
+            // Stats
+            const newSize = (data.byteLength / (1024 * 1024)).toFixed(2);
+            document.getElementById("res-old").textContent =
+              (currentFile.size / (1024 * 1024)).toFixed(2) + "MB";
+            document.getElementById("res-new").textContent = newSize + "MB";
+
+            // Download
+            const url = URL.createObjectURL(
+              new Blob([data.buffer], { type: `video/${outExt}` })
+            );
+            document.getElementById("dl-btn").onclick = () => {
+              const a = document.createElement("a");
+              a.href = url;
+              a.download = `transcode_${Date.now()}.${outExt}`;
+              a.click();
+            };
+          } catch (e) {
+            console.error(e);
+            log("ERROR: " + e.message);
+            alert("Operation Failed. Try a smaller file or refresh.");
+            location.reload();
+          }
+        });
     </script>
-</body>
+  </body>
 </html>
